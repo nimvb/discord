@@ -1,0 +1,15 @@
+---
+spring:
+  profiles:
+    active: aaa
+    default: aaa
+  data:
+    mongodb:
+      auto-index-creation: true
+      database: discord
+      username: root
+      password: P@ssw0rd
+      port: 27017
+      host: localhost
+      authentication-database: admin
+
