@@ -22,9 +22,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.test.StepVerifier;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 @DataMongoTest
@@ -46,7 +50,42 @@ class UserTest {
     @Autowired
     Validator validator;
 
+    @Test
+    void ShouldReturnANewBuilderWhetherOrNotAValidaValidatorIsPassed(){
+        User.Builder builder = new User.Builder(null);
+        User.Builder builderWithValidator = new User.Builder(validator);
+        Assertions.assertThat(builder).isNotNull();
+        Assertions.assertThat(builderWithValidator).isNotNull();
+    }
+    
+    @Test
+    void ShouldReturnAUserObjectWhenNULLValidatorIsPassed(){
+        User.Builder builderWithNoValidator = new User.Builder(null);
+        User         user = builderWithNoValidator.build();
+        User nullUser = new User(null,null,null);
+        Assertions.assertThat(user).isNotNull();
+        Assertions.assertThat(user).isEqualTo(nullUser);
+    }
 
+    @Test
+    void ShouldThrownAnExceptionWhenAValidatorAndInvalidUserParametersArePassed(){
+        User.Builder builderWithValidator = new User.Builder(validator);
+        User testCase = new User(null,null,null);
+        Comparator<ConstraintViolation<User>> violationComparator = Comparator.comparing(ConstraintViolation::getMessage);
+        Set<ConstraintViolation<User>> violations = new TreeSet<>(violationComparator);
+        violations.addAll(validator.validate(testCase));
+        Assertions.assertThatThrownBy(() -> {
+            User         user = builderWithValidator.build();
+        }).isInstanceOf(ConstraintViolationException.class)
+                .hasMessage("constructing a new user has been failed")
+                .has(new Condition<>(throwable -> {
+                    ConstraintViolationException violationException = (ConstraintViolationException) throwable;
+                    TreeSet<ConstraintViolation<?>> constraintViolations = new TreeSet(violationComparator);
+                    constraintViolations.addAll(violationException.getConstraintViolations());
+                    return constraintViolations.toString().equals(violations.toString());
+                },"violation equality check"));
+
+    }
 
 
     @Test
@@ -65,6 +104,7 @@ class UserTest {
                     violation.getMessage().equals("password is required");
         }, "null password");
         User user = new User(null, null, null);
+        
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()

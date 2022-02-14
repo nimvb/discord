@@ -2,6 +2,7 @@ package com.nimvb.app.discord.repository;
 
 import com.nimvb.app.discord.configuration.MongoConfiguration;
 import com.nimvb.app.discord.domain.User;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ class UserRepositoryTest {
 
     @Test
     void ShouldReturnTheUserWhenTheUsernameIsProvided(){
-        User user = new User("username","password","email@email.com");
+        User user = UserBuilder.build("username","password","email@email.com");
         template.save(user).block();
 
 
@@ -85,7 +86,7 @@ class UserRepositoryTest {
 
     @Test
     void ShouldReturnTheUserWhenTheEmailIsProvided(){
-        User user = new User("username","password","email@email.com");
+        User user = UserBuilder.build("username","password","email@email.com");
         template.save(user).block();
 
 

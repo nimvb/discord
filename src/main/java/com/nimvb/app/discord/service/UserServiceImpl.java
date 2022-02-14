@@ -23,8 +23,11 @@ public class UserServiceImpl implements UserService {
     public Mono<Void> create(@NonNull UserRegistrationRequest request) {
 
         return Mono.just(request)
-                .map(req -> new User(req.getUsername(), passwordEncoder
-                        .encode(req.getPassword()), req.getEmail()))
+                .map(req -> User.builder()
+                        .withUsername(req.getUsername())
+                        .withPassword(passwordEncoder.encode(req.getPassword()))
+                        .withEmail(req.getEmail())
+                        .build())
                 .flatMap(userRepository::save)
                 .onErrorResume(throwable -> {
                     return Mono.error(

@@ -7,6 +7,7 @@ import com.nimvb.app.discord.configuration.TestClockConfiguration;
 import com.nimvb.app.discord.domain.User;
 import com.nimvb.app.discord.security.service.SecretProvider;
 import com.nimvb.app.discord.service.AccessTokenConverterOfUsernamePasswordAuthentication;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,8 +45,8 @@ class LoginControllerTest {
 
 
     private static final Map<String, User> USERS = Map.of(
-            "username",new User("username","password","email@email.com"),
-            "anotheruser",new User("anotheruser","password","email@email.com")
+            "username", UserBuilder.build("username","password","email@email.com"),
+            "anotheruser",UserBuilder.build("anotheruser","password","email@email.com")
     );
 
     @MockBean

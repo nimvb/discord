@@ -36,6 +36,19 @@ class UserServiceTest {
 
     @Autowired
     UserService userService;
+    
+    private User sampleUser(){
+        return User
+                .builder()
+                .withUsername("username")
+                .withPassword("password")
+                .withEmail("email@email.com")
+                .build();
+    }
+    
+    private UserRegistrationRequest sampleRegistrationRequest(){
+        return new UserRegistrationRequest("username", "password", "email@email.com");
+    }
 
     @Test
     void ShouldThrownAnExceptionWhenNULLPassedAsAnArgument() {
@@ -51,16 +64,16 @@ class UserServiceTest {
 
     @Test
     void ShouldCreateAUserWhenTheRequiredArgumentsIsProvided() {
-        final Mono<Void> result = userService.create(new UserRegistrationRequest("username", "password", "email@email.com"));
+        final Mono<Void> result = userService.create(sampleRegistrationRequest());
         final Mono<User> entity = repository.findByUsername("username");
         StepVerifier.create(result).expectNextCount(0).verifyComplete();
         StepVerifier.create(entity).expectNextCount(1).verifyComplete();
-        StepVerifier.create(entity).expectNext(new User("username", "password", "email@email.com")).verifyComplete();
+        StepVerifier.create(entity).expectNext(sampleUser()).verifyComplete();
     }
 
     @Test
     void ShouldThrownAnErrorWhenTheProvidedUsernameIsAlreadyExists() {
-        final Mono<Void> user = userService.create(new UserRegistrationRequest("username", "password", "email@email.com"));
+        final Mono<Void> user = userService.create(sampleRegistrationRequest());
         final Mono<Void> demand = userService.create(new UserRegistrationRequest("username", "password1", "email1@email.com"));
         final Mono<User> entity = repository.findByUsername("username");
         StepVerifier.create(user).expectNextCount(0).verifyComplete();
@@ -70,13 +83,13 @@ class UserServiceTest {
                                 .isAssignableFrom(throwable.getClass()))
                 .verify();
         StepVerifier.create(entity).expectNextCount(1).verifyComplete();
-        StepVerifier.create(entity).expectNext(new User("username", "password", "email@email.com")).verifyComplete();
+        StepVerifier.create(entity).expectNext(sampleUser()).verifyComplete();
     }
 
 
     @Test
     void ShouldFindUserWhenTheUsernameWhichIsAlreadyPersistedIsProvided(){
-        User       entity = new User("username", "password", "email@email.com");
+        User       entity = sampleUser();
         Mono<User> user   = repository.save(entity);
         StepVerifier.create(user).expectNextCount(1).verifyComplete();
 
@@ -88,7 +101,7 @@ class UserServiceTest {
 
     @Test
     void ShouldThrownAnExceptionWhenTheUsernameWhichIsNotExistsIsProvided(){
-        User       entity = new User("username", "password", "email@email.com");
+        User       entity = sampleUser();
         Mono<User> user   = repository.save(entity);
         StepVerifier.create(user).expectNextCount(1).verifyComplete();
 

@@ -3,6 +3,7 @@ package com.nimvb.app.discord.security.service;
 import com.nimvb.app.discord.domain.User;
 import com.nimvb.app.discord.exception.UserNotFoundException;
 import com.nimvb.app.discord.service.UserService;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,8 +30,8 @@ class ReactiveCustomUserDetailsServiceTest {
 
     private final static List<User> USERS = List
             .of(
-                    new User("username", "password", "email@email.com"),
-                    new User("other", "password", "other@email.com")
+                    UserBuilder.build("username", "password", "email@email.com"),
+                    UserBuilder.build("other", "password", "other@email.com")
             );
 
     @MockBean

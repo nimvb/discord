@@ -3,6 +3,7 @@ package com.nimvb.app.discord.security.provider;
 import com.nimvb.app.discord.configuration.TestEncodingConfiguration;
 import com.nimvb.app.discord.domain.User;
 import com.nimvb.app.discord.security.resource.BearerTokenAuthenticationToken;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,9 @@ import java.util.List;
 @Import(TestEncodingConfiguration.class)
 class ReactiveUsernamePasswordAuthenticationProviderTest {
 
-    private static final List<User> USERS = List.of(new User("username", "password", "email@email.com"));
+    private static final List<User> USERS = List.of(
+            UserBuilder.build("username", "password", "email@email.com")
+    );
 
     @MockBean
     ReactiveUserDetailsService userDetailsService;
