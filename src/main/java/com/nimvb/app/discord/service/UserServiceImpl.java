@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class UserServiceImpl implements UserService {
 
         return Mono.just(request)
                 .map(req -> new User(req.getUsername(), passwordEncoder
-                        .encode(req.getPassword()), req.getEmail()))
+                        .encode(req.getPassword()), req.getEmail(), Collections.emptyList()))
                 .flatMap(userRepository::save)
                 .onErrorResume(throwable -> {
                     return Mono.error(

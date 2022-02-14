@@ -23,6 +23,8 @@ import reactor.test.StepVerifier;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -64,14 +66,20 @@ class UserTest {
             return violation.getRootBean().getPassword() == null &&
                     violation.getMessage().equals("password is required");
         }, "null password");
-        User user = new User(null, null, null);
+        Condition<ConstraintViolation<User>> roles = new Condition<>(violation -> {
+
+            return violation.getRootBean().getRoles() == null &&
+                    violation.getMessage().equals("roles are required");
+        }, "null roles");
+        User user = new User(null, null, null,null);
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()
-                .hasSizeGreaterThanOrEqualTo(3)
+                .hasSizeGreaterThanOrEqualTo(4)
                 .haveExactly(1, username)
                 .haveExactly(1, email)
-                .haveExactly(1, password);
+                .haveExactly(1, password)
+                .haveExactly(1, roles);
     }
 
     @Test
@@ -92,7 +100,7 @@ class UserTest {
         }, "blank password");
 
 
-        User user = new User(" ", "   ", " ");
+        User user = new User(" ", "   ", " ", Collections.emptySet());
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()
@@ -118,7 +126,7 @@ class UserTest {
         }, "empty password");
 
 
-        User user = new User("", "", "");
+        User user = new User("", "", "",Collections.emptyList());
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()
@@ -158,8 +166,8 @@ class UserTest {
 
     @Test
     void ShouldTestEqualityOfTwoUserObjectsBasedOnAllFieldValuesExceptThePasswordField(){
-        User first = new User("username","password","email@email");
-        User second = new User("username","password","email@email");
+        User first = new User("username","password","email@email", Set.of("R1","R2"));
+        User second = new User("username","password","email@email",Set.of("R2","R1"));
         Assertions.assertThat(first).isEqualTo(second);
     }
 

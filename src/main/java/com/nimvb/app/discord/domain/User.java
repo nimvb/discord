@@ -1,10 +1,7 @@
 package com.nimvb.app.discord.domain;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,6 +9,9 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 
 @AllArgsConstructor
@@ -31,5 +31,7 @@ public class User {
     @NotNull(message = "email is required")
     @NotBlank(message = "invalid email")
     @Email
-    private final String email;
+    private final String             email;
+    @NonNull
+    private final Collection<String> roles;
 }
