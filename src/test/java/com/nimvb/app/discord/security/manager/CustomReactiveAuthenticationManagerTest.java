@@ -2,6 +2,7 @@ package com.nimvb.app.discord.security.manager;
 
 import com.nimvb.app.discord.domain.User;
 import com.nimvb.app.discord.security.provider.ReactiveAuthenticationProvider;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,8 +40,8 @@ class CustomReactiveAuthenticationManagerTest {
     @BeforeAll
     static void initUsers(){
         USERS = new HashMap<>();
-        USERS.put("username",new User("username","password","email@email.com"));
-        USERS.put("testuser",new User("testuser","password","email@email.com"));
+        USERS.put("username", UserBuilder.build("username","password","email@email.com"));
+        USERS.put("testuser",UserBuilder.build("testuser","password","email@email.com"));
         USERS = Collections.unmodifiableMap(USERS);
     }
 
