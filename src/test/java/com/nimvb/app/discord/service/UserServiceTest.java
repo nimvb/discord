@@ -8,6 +8,7 @@ import com.nimvb.app.discord.exception.UserNotFoundException;
 import com.nimvb.app.discord.exception.UsernameIsAlreadyExistsException;
 import com.nimvb.app.discord.repository.UserRepository;
 import com.nimvb.app.discord.request.UserRegistrationRequest;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,12 +39,7 @@ class UserServiceTest {
     UserService userService;
     
     private User sampleUser(){
-        return User
-                .builder()
-                .withUsername("username")
-                .withPassword("password")
-                .withEmail("email@email.com")
-                .build();
+        return UserBuilder.build("username","password","email@email.com");
     }
     
     private UserRegistrationRequest sampleRegistrationRequest(){

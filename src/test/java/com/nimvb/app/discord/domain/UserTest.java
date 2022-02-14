@@ -3,15 +3,12 @@ package com.nimvb.app.discord.domain;
 import com.nimvb.app.discord.configuration.MongoConfiguration;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -29,7 +26,6 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 @DataMongoTest
@@ -63,7 +59,7 @@ class UserTest {
     void ShouldReturnAUserObjectWhenNULLValidatorIsPassed(){
         User.Builder builderWithNoValidator = new User.Builder(null);
         User         user = builderWithNoValidator.build();
-        User nullUser = new User(null,null,null);
+        User nullUser = new User(null,null,null,Collections.emptySet());
         Assertions.assertThat(user).isNotNull();
         Assertions.assertThat(user).isEqualTo(nullUser);
     }
@@ -71,7 +67,7 @@ class UserTest {
     @Test
     void ShouldThrownAnExceptionWhenAValidatorAndInvalidUserParametersArePassed(){
         User.Builder builderWithValidator = new User.Builder(validator);
-        User testCase = new User(null,null,null);
+        User testCase = new User(null,null,null,Collections.emptySet());
         Comparator<ConstraintViolation<User>> violationComparator = Comparator.comparing(ConstraintViolation::getMessage);
         Set<ConstraintViolation<User>> violations = new TreeSet<>(violationComparator);
         violations.addAll(validator.validate(testCase));
@@ -165,7 +161,7 @@ class UserTest {
         }, "empty password");
 
 
-        User user = new User("", "", "",Collections.emptyList());
+        User user = new User("", "", "",Collections.emptySet());
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()

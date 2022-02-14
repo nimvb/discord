@@ -8,6 +8,7 @@ import com.nimvb.app.discord.exception.UserNotFoundException;
 import com.nimvb.app.discord.exception.UsernameIsAlreadyExistsException;
 import com.nimvb.app.discord.request.UserRegistrationRequest;
 import com.nimvb.app.discord.service.UserService;
+import com.nimvb.app.discord.util.UserBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,7 +54,7 @@ class RegistrationControllerPublicTest {
             if(users.containsKey(request.getUsername())){
                 return Mono.error(new UsernameIsAlreadyExistsException(request.getUsername(),null));
             }
-            User user = new User(request.getUsername(), request.getPassword(), request.getEmail());
+            User user = UserBuilder.build(request.getUsername(), request.getPassword(), request.getEmail());
             users.put(request.getUsername(), user);
             return Mono.just(user)
                     .then();
