@@ -21,10 +21,7 @@ import reactor.test.StepVerifier;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Predicate;
 
 @ExtendWith(SpringExtension.class)
@@ -48,40 +45,111 @@ class UserTest {
     Validator validator;
 
     @Test
-    void ShouldReturnANewBuilderWhetherOrNotAValidaValidatorIsPassed(){
-        User.Builder builder = new User.Builder(null);
+    void ShouldReturnANewBuilderWhetherOrNotAValidaValidatorIsPassed() {
+        User.Builder builder              = new User.Builder(null);
         User.Builder builderWithValidator = new User.Builder(validator);
         Assertions.assertThat(builder).isNotNull();
         Assertions.assertThat(builderWithValidator).isNotNull();
     }
-    
+
     @Test
-    void ShouldReturnAUserObjectWhenNULLValidatorIsPassed(){
+    void ShouldReturnAUserObjectWhenTheNULLValidatorIsPassed() {
         User.Builder builderWithNoValidator = new User.Builder(null);
-        User         user = builderWithNoValidator.build();
-        User nullUser = new User(null,null,null,Collections.emptySet());
+        User         user                   = builderWithNoValidator.build();
+        User         nullUser               = new User(null, null, null, Collections.emptySet());
         Assertions.assertThat(user).isNotNull();
         Assertions.assertThat(user).isEqualTo(nullUser);
     }
 
     @Test
-    void ShouldThrownAnExceptionWhenAValidatorAndInvalidUserParametersArePassed(){
-        User.Builder builderWithValidator = new User.Builder(validator);
-        User testCase = new User(null,null,null,Collections.emptySet());
-        Comparator<ConstraintViolation<User>> violationComparator = Comparator.comparing(ConstraintViolation::getMessage);
-        Set<ConstraintViolation<User>> violations = new TreeSet<>(violationComparator);
+    void ShouldInspectThePassedParametersToTheBuilderObjectWhenInspectionIsRequired() {
+        User.Builder           builder              = new User.Builder(null);
+        User.Builder.Inspector inspector            = builder.inspect();
+        Collection<String>     rolesSnapshot        = inspector.rolesSnapshot();
+        Collection<String>     anotherRolesSnapshot = inspector.rolesSnapshot();
+        Assertions.assertThat(rolesSnapshot).isUnmodifiable().isEmpty();
+        Assertions.assertThat(rolesSnapshot).isNotSameAs(anotherRolesSnapshot);
+        Assertions.assertThat(rolesSnapshot).isEqualTo(anotherRolesSnapshot);
+        Assertions.assertThat(inspector.and()).isSameAs(builder);
+    }
+
+    @Test
+    void ShouldThrownAnExceptionWhenAValidatorAndInvalidUserParametersArePassed() {
+        User.Builder                          builderWithValidator = new User.Builder(validator);
+        User                                  testCase             = new User(null, null, null, Collections.emptySet());
+        Comparator<ConstraintViolation<User>> violationComparator  = Comparator.comparing(ConstraintViolation::getMessage);
+        Set<ConstraintViolation<User>>        violations           = new TreeSet<>(violationComparator);
         violations.addAll(validator.validate(testCase));
         Assertions.assertThatThrownBy(() -> {
-            User         user = builderWithValidator.build();
-        }).isInstanceOf(ConstraintViolationException.class)
+                    User user = builderWithValidator.build();
+                }).isInstanceOf(ConstraintViolationException.class)
                 .hasMessage("constructing a new user has been failed")
                 .has(new Condition<>(throwable -> {
-                    ConstraintViolationException violationException = (ConstraintViolationException) throwable;
+                    ConstraintViolationException    violationException   = (ConstraintViolationException) throwable;
                     TreeSet<ConstraintViolation<?>> constraintViolations = new TreeSet(violationComparator);
                     constraintViolations.addAll(violationException.getConstraintViolations());
                     return constraintViolations.toString().equals(violations.toString());
-                },"violation equality check"));
+                }, "violation equality check"));
 
+    }
+
+    @Test
+    void ShouldBuilderUpdatesTheCurrentSnapshotOfTheRolesWhenANewRoleIsGiven() {
+        User.Builder           builder   = new User.Builder(null);
+        User.Builder.Inspector inspector = builder.inspect();
+        Assertions.assertThatThrownBy(() -> {
+                    builder.withRole(null);
+                })
+                .isInstanceOf(NullPointerException.class);
+        builder.withRole("R1");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R1"));
+        builder.withRole("R2");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R1", "R2"));
+    }
+
+    @Test
+    void ShouldBuilderUpdatesTheCurrentSnapshotOfTheRolesWhenTheNewRolesAreGiven() {
+        User.Builder           builder   = new User.Builder(null);
+        User.Builder.Inspector inspector = builder.inspect();
+        Assertions.assertThatThrownBy(() -> {
+                    builder.withRoles(null);
+                })
+                .isInstanceOf(NullPointerException.class);
+        builder.withRoles("R1");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R1"));
+        builder.withRoles("R2", "R3");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R1", "R2", "R3"));
+    }
+
+    @Test
+    void ShouldBuilderUpdatesTheCurrentSnapshotOfTheRolesWhenTheRoleRevocationIsDemanded() {
+        User.Builder           builder   = new User.Builder(null);
+        User.Builder.Inspector inspector = builder.inspect();
+        Assertions.assertThatThrownBy(() -> {
+                    builder.revoke(null);
+                })
+                .isInstanceOf(NullPointerException.class);
+        builder.revoke("R1");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEmpty();
+        builder.withRoles("R2", "R3").revoke("R1");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R2", "R3"));
+        builder.revoke("R2");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R3"));
+        builder.revoke("R3");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEmpty();
+    }
+
+
+    @Test
+    void ShouldBuilderUpdatesTheCurrentSnapshotOfTheRolesWhenTheAllRolesRevocationIsDemanded() {
+        User.Builder           builder   = new User.Builder(null);
+        User.Builder.Inspector inspector = builder.inspect();
+        builder.revokeAll();
+        Assertions.assertThat(inspector.rolesSnapshot()).isEmpty();
+        builder.withRoles("R2", "R3");
+        Assertions.assertThat(inspector.rolesSnapshot()).isEqualTo(Set.of("R2", "R3"));
+        builder.revokeAll();
+        Assertions.assertThat(inspector.rolesSnapshot()).isEmpty();
     }
 
 
@@ -102,11 +170,11 @@ class UserTest {
         }, "null password");
         Condition<ConstraintViolation<User>> roles = new Condition<>(violation -> {
 
-            return violation.getRootBean().getRoles() == null &&
+            return violation.getRootBean().getRoles().equals(Collections.emptySet()) &&
                     violation.getMessage().equals("roles are required");
         }, "null roles");
-        User user = new User(null, null, null,null);
-        
+        User user = new User(null, null, null, null);
+
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()
@@ -135,7 +203,7 @@ class UserTest {
         }, "blank password");
 
 
-        User user = new User(" ", "   ", " ", Collections.emptySet());
+        User                                 user       = new User(" ", "   ", " ", Collections.emptySet());
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()
@@ -161,7 +229,7 @@ class UserTest {
         }, "empty password");
 
 
-        User user = new User("", "", "",Collections.emptySet());
+        User                                 user       = new User("", "", "", Collections.emptySet());
         final Set<ConstraintViolation<User>> violations = validator.validate(user);
         Assertions.assertThat(violations)
                 .isNotNull()
@@ -200,9 +268,9 @@ class UserTest {
     }
 
     @Test
-    void ShouldTestEqualityOfTwoUserObjectsBasedOnAllFieldValuesExceptThePasswordField(){
-        User first = new User("username","password","email@email", Set.of("R1","R2"));
-        User second = new User("username","password","email@email",Set.of("R2","R1"));
+    void ShouldTestEqualityOfTwoUserObjectsBasedOnAllFieldValuesExceptThePasswordField() {
+        User first  = new User("username", "password", "email@email", Set.of("R1", "R2"));
+        User second = new User("username", "password", "email@email", Set.of("R2", "R1"));
         Assertions.assertThat(first).isEqualTo(second);
     }
 
@@ -235,6 +303,26 @@ class UserTest {
     }
 
 
+    @Test
+    void ShouldReturnImmutableRolesWhenTheUserObjectIsInstantiatedViaGivenRoles() {
+        Set<String> roles = new HashSet<>();
+        roles.add("R1");
+        roles.add("R2");
+        User user = new User(null, null, null, roles);
+        Assertions.assertThat(user.getRoles())
+                .isUnmodifiable()
+                .containsAll(roles)
+                .isEqualTo(roles);
+    }
+
+    @Test
+    void ShouldReturnImmutableEmptySetOfRolesWhenANULLPassedAsTheValueForRoles() {
+        User user = new User(null, null, null, null);
+        Assertions.assertThat(user.getRoles())
+                .isNotNull()
+                .isUnmodifiable()
+                .isEmpty();
+    }
 
 
 }

@@ -43,7 +43,7 @@ public class User {
         if (this.roles != null) {
             return Collections.unmodifiableSet(this.roles);
         }
-        return this.roles;
+        return Collections.unmodifiableSet(Collections.emptySet());
     }
 
     public static Builder builder() {
@@ -61,6 +61,18 @@ public class User {
         private       String      password;
         private       String      email;
         private       Set<String> roles = new HashSet<>();
+        
+        @AllArgsConstructor
+        final class Inspector {
+            private final Builder parent;
+            public Builder and(){
+                return parent;
+            }
+            
+            public Collection<String> rolesSnapshot(){
+                return Collections.unmodifiableSet(Set.copyOf(parent.roles));
+            }
+        }
 
         public Builder(Validator validator) {
 
@@ -82,6 +94,10 @@ public class User {
         public Builder withEmail(String email) {
             this.email = email;
             return this;
+        }
+        
+        public Inspector inspect(){
+            return new Inspector(this);
         }
 
         public Builder withRole(@NonNull String role) {
