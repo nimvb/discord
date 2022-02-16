@@ -30,7 +30,7 @@ public class ReactiveCustomUserDetailsService implements ReactiveUserDetailsServ
                 .flatMap(s -> userService.find(username))
                 .map(user -> User.withUsername(username)
                         .password(user.getPassword())
-                        .authorities(Collections.emptyList())
+                        .authorities(user.getRoles().toArray(new String[0]))
                         .build())
                 .onErrorResume(throwable -> Mono.empty());
     }

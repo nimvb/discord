@@ -30,8 +30,8 @@ class ReactiveCustomUserDetailsServiceTest {
 
     private final static List<User> USERS = List
             .of(
-                    UserBuilder.build("username", "password", "email@email.com"),
-                    UserBuilder.build("other", "password", "other@email.com")
+                    UserBuilder.build("username", "password", "email@email.com",UserBuilder.DEFAULT_ROLES_SERIALIZED),
+                    UserBuilder.build("other", "password", "other@email.com",UserBuilder.DEFAULT_ROLES_SERIALIZED)
             );
 
     @MockBean
@@ -66,11 +66,16 @@ class ReactiveCustomUserDetailsServiceTest {
     void ShouldReturnProperUserDetailsWhenValidUsernameIsProvided() {
         final Mono<UserDetails> userDetails = userDetailsService.findByUsername("username");
         StepVerifier.create(userDetails).expectNextCount(1).verifyComplete();
-        StepVerifier.create(userDetails).expectNext(org.springframework.security.core.userdetails.User
-                .withUsername("username")
-                .password("password")
-                .authorities(Collections.emptyList())
-                .build()
+        StepVerifier.create(userDetails).expectNext(
+                userService.find("username")
+                        .map(user -> org.springframework.security.core.userdetails.User
+                                .withUsername(user.getUsername())
+                                .password(user.getPassword())
+                                .authorities(user.getRoles().toArray(new String[0]))
+                                .build()
+                        )
+                        .blockOptional()
+                        .orElseThrow()
         ).verifyComplete();
     }
 
