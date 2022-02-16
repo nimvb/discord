@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -20,6 +21,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RolesProvider rolesProvider;
 
     @Override
     public Mono<Void> create(@NonNull UserRegistrationRequest request) {
@@ -29,6 +31,7 @@ public class UserServiceImpl implements UserService {
                         .withUsername(req.getUsername())
                         .withPassword(passwordEncoder.encode(req.getPassword()))
                         .withEmail(req.getEmail())
+                        .withRoles(rolesProvider.provide().stream().map(RolesProvider.Role::toString).collect(Collectors.toUnmodifiableSet()).toArray(new String[0]))
                         .build())
                 .flatMap(userRepository::save)
                 .onErrorResume(throwable -> {

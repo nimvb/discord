@@ -10,17 +10,22 @@ import com.nimvb.app.discord.repository.UserRepository;
 import com.nimvb.app.discord.request.UserRegistrationRequest;
 import com.nimvb.app.discord.util.UserBuilder;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 @DataMongoTest()
@@ -37,9 +42,17 @@ class UserServiceTest {
 
     @Autowired
     UserService userService;
+
+    @MockBean
+    RolesProvider rolesProvider;
+
+    @BeforeEach
+    void init(){
+        Mockito.when(rolesProvider.provide()).thenReturn(UserBuilder.DEFAULT_ROLES);
+    }
     
     private User sampleUser(){
-        return UserBuilder.build("username","password","email@email.com");
+        return UserBuilder.build("username","password","email@email.com",UserBuilder.DEFAULT_ROLES.stream().map(RolesProvider.Role::toString).collect(Collectors.toUnmodifiableSet()));
     }
     
     private UserRegistrationRequest sampleRegistrationRequest(){

@@ -1,6 +1,7 @@
 package com.nimvb.app.discord.configuration;
 
 import com.nimvb.app.discord.repository.UserRepository;
+import com.nimvb.app.discord.service.RolesProvider;
 import com.nimvb.app.discord.service.UserService;
 import com.nimvb.app.discord.service.UserServiceImpl;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -11,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class TestUserServiceConfiguration {
 
     @Bean
-    UserService userService(PasswordEncoder passwordEncoder, UserRepository userRepository){
-        return new UserServiceImpl(userRepository, passwordEncoder);
+    UserService userService(PasswordEncoder passwordEncoder, UserRepository userRepository, RolesProvider rolesProvider){
+        return new UserServiceImpl(userRepository, passwordEncoder,rolesProvider);
     }
 }
