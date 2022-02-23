@@ -94,6 +94,52 @@ class UserTest {
     }
 
     @Test
+    void ShouldThrownAnExceptionWhenANewUserIsBuildFromANullUserInstance(){
+        User.Builder                          builderWithValidator = new User.Builder(validator);
+        User                                  testCase             = null;
+        Comparator<ConstraintViolation<User>> violationComparator  = Comparator.comparing(ConstraintViolation::getMessage);
+        Set<ConstraintViolation<User>>        violations           = new TreeSet<>(violationComparator);
+        violations.addAll(validator.validate(new User(null,null,null,Collections.emptySet())));
+        Assertions.assertThatThrownBy(() -> {
+                    User user = builderWithValidator.from(testCase).build();
+                }).isInstanceOf(ConstraintViolationException.class)
+                .hasMessage("constructing a new user has been failed")
+                .has(new Condition<>(throwable -> {
+                    ConstraintViolationException    violationException   = (ConstraintViolationException) throwable;
+                    TreeSet<ConstraintViolation<?>> constraintViolations = new TreeSet(violationComparator);
+                    constraintViolations.addAll(violationException.getConstraintViolations());
+                    return constraintViolations.toString().equals(violations.toString());
+                }, "violation equality check"));
+    }
+
+    @Test
+    void ShouldThrownAnExceptionWhenANewUserIsBuildFromAInvalidUserInstance(){
+        User.Builder                          builderWithValidator = new User.Builder(validator);
+        User                                  testCase             = new User(null,null,null,null);
+        Comparator<ConstraintViolation<User>> violationComparator  = Comparator.comparing(ConstraintViolation::getMessage);
+        Set<ConstraintViolation<User>>        violations           = new TreeSet<>(violationComparator);
+        violations.addAll(validator.validate(testCase));
+        Assertions.assertThatThrownBy(() -> {
+                    User user = builderWithValidator.from(testCase).build();
+                }).isInstanceOf(ConstraintViolationException.class)
+                .hasMessage("constructing a new user has been failed")
+                .has(new Condition<>(throwable -> {
+                    ConstraintViolationException    violationException   = (ConstraintViolationException) throwable;
+                    TreeSet<ConstraintViolation<?>> constraintViolations = new TreeSet(violationComparator);
+                    constraintViolations.addAll(violationException.getConstraintViolations());
+                    return constraintViolations.toString().equals(violations.toString());
+                }, "violation equality check"));
+    }
+
+    @Test
+    void ShouldBuilderBuildANewUserWhenAValidUserIsPassed(){
+        User.Builder builder = new User.Builder(null);
+        User user = new User("username","password","email@email.com",Set.of("ROLE_FAKE"));
+        final User target = builder.from(user).build();
+        Assertions.assertThat(target).isNotNull().isNotSameAs(user).isEqualTo(user);
+    }
+
+    @Test
     void ShouldBuilderUpdatesTheCurrentSnapshotOfTheRolesWhenANewRoleIsGiven() {
         User.Builder           builder   = new User.Builder(null);
         User.Builder.Inspector inspector = builder.inspect();

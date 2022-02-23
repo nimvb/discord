@@ -95,6 +95,16 @@ public class User {
             this.email = email;
             return this;
         }
+
+        public Builder from(User user){
+            if(user != null){
+                this.username = user.username;
+                this.email = user.email;
+                this.roles = user.roles;
+                this.password = user.password;
+            }
+            return this;
+        }
         
         public Inspector inspect(){
             return new Inspector(this);
